@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>W3.CSS Template</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+body,h1 {font-family: "Montserrat", sans-serif}
+img {margin-bottom: -7px}
+.w3-row-padding img {margin-bottom: 12px}
+
+    #temperature-graph {
+      background-color: #f9f9f9;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      width: 80%; /* Set width as a percentage of the parent container */
+      max-width: 1200px; /* Optional: Set a maximum width */
+      height: 500px; /* Fixed height */
+      margin: 20px auto; /* Center the graph horizontally */
+    }
+
+    /* Styling for the Zoom Instruction */
+    #zoom-instruction {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+      color: #333;
+      margin-top: 10px;
+    }
+
+    #zoom-instruction .icon {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      margin-right: 10px;
+      border: 2px dashed #333;
+      position: relative;
+    }
+
+    #zoom-instruction .icon::before {
+      content: '';
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      width: 8px;
+      height: 8px;
+      border: 2px solid #333;
+    }
+
+    #zoom-instruction .reset {
+      margin-left: 20px;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    /* Styling for the Legend */
+    #legend {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      color: #333;
+      margin-top: 10px;
+    }
+
+    #legend .item {
+      display: flex;
+      align-items: center;
+      margin-right: 20px;
+    }
+
+    #legend .color-box {
+      width: 15px;
+      height: 15px;
+      margin-right: 5px;
+      border: 1px solid #333;
+    }
+
+    #legend .lowess {
+      background-color: black;
+    }
+
+    #legend .mean {
+      background-color: lightgray;
+    }
+
+    /* Pulsating dot */
+    .pulsating-dot {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background-color: red;
+      border-radius: 50%;
+      animation: pulse 1s infinite;
+      pointer-events: none; /* Prevent the dot from interfering with user interactions */
+    }
+
+    /* Pulsating animation */
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1.5);
+        opacity: 0.5;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    /* Data source styling */
+    #data-source {
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      color: #666;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .chart-container {
+      text-align: center; /* Centers the chart horizontally */
+    }
+    #chart {
+      display: inline-block; /* Makes the chart an inline-block element */
+    }
+    .description {
+      text-align: center;
+      font-size: 12px;
+      color: gray;
+      margin-top: -50px;
+    }
+
+    body {
+      text-align: center; /* Center everything on the page */
+      font-family: "Arial", sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #ffffff;
+    }
+    .chart-title {
+      text-align: center;
+      margin: 10px 0;
+      font-size: 22px;
+      font-weight: bold;
+    }
+    .chart-subtitle {
+      text-align: center;
+      font-size: 16px;
+      color: #555;
+      margin-bottom: 10px;
+    }
+    .legend {
+      text-align: center;
+      font-size: 14px;
+      margin: 20px 0;
+    }
+    .legend span {
+      display: inline-block;
+      margin: 0 10px;
+      font-weight: bold;
+    }
+    .legend .color-box {
+      width: 12px;
+      height: 12px;
+      display: inline-block;
+      margin-right: 5px;
+      border-radius: 50%;
+    }
+    #chart-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-gap: 40px 20px;
+      justify-content: center;
+      padding: 20px;
+    }
+    .second-row {
+      grid-column: span 3;
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+    }
+    .chart-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .chart-label {
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .chart {
+      width: 350px;
+      height: 150px;
+    }
+    .chart-footer {
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+      margin-top: 20px;
+    }
+ 
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<!-- <nav class="w3-sidebar w3-black w3-animate-top w3-xxlarge" style="display:none;padding-top:150px" id="mySidebar">
+  <a href="javascript:void(0)" onclick="w3_close()" class="w3-button w3-black w3-xxlarge w3-padding w3-display-topright" style="padding:6px 24px">
+    <i class="fa fa-remove"></i>
+  </a>
+  <div class="w3-bar-block w3-center">
+    <a href="#" class="w3-bar-item w3-button w3-text-grey w3-hover-black">About</a>
+    <a href="#" class="w3-bar-item w3-button w3-text-grey w3-hover-black">Photos</a>
+    <a href="#" class="w3-bar-item w3-button w3-text-grey w3-hover-black">Shop</a>
+    <a href="#" class="w3-bar-item w3-button w3-text-grey w3-hover-black">Contact</a>
+  </div>
+</nav> -->
+
+<!-- !PAGE CONTENT! -->
+<div class="w3-content" style="max-width:1500px">
+
+<!-- Header -->
+<div class="w3-opacity">
+<span class="w3-button w3-xxlarge w3-white w3-right" onclick="w3_open()"><i class="fa fa-bars"></i></span> 
+<div class="w3-clear"></div>
+<header class="w3-center w3-margin-bottom">
+  <h1><b>Data Visualization Portfolio</b></h1>
+</header>
+</div>
+
+<div class="chart-title">Task 12. Interactive Graph</div>
+<div id="temperature-graph"></div>
+
+<!-- Zoom Instructions -->
+<div id="zoom-instruction">
+  <div class="icon"></div>
+  <span>Click + Drag to Zoom</span>
+  <span class="reset" onclick="Plotly.relayout('temperature-graph', {xaxis: {autorange: true}, yaxis: {autorange: true}});">Reset</span>
+</div>
+<div id="pulsating-dot" class="pulsating-dot" style="display: none;"></div> <!-- Pulsating dot -->
+  <!-- Data source -->
+  <div id="data-source">
+      Data source: NASA's Goddard Institute for Space Studies (GISS). Credit: NASA/GISS
+      <p>Made with JavaScript</p>
+  </div>
+
+
+
+  <div class="chart-title">Task 4. Visualization about climate change</div>
+  <div class="chart-container">
+    <div id="chart" style="width: 900px; height: 500px;"></div>
+  </div>
+  <div class="description">
+    <p><strong>Note:</strong> Information and Communications Technology is excluded due to low funding values.</p>
+    <p><strong>Source:</strong> Global Landscape of Climate Finance 2024.</p>
+    <p>Made with JavaScript</p>
+  </div>
+
+
+
+  <div class="chart-title">Task 5. Black-and-white visualization</div>
+
+
+  <div id="chart2" style="display: inline-block; width: 900px; height: 500px;"></div>
+  <div class="description">
+    <p><strong>Source:</strong> Financial Access Survey, IMF.</p>
+    <p>Made with JavaScript</p>
+  </div>
+
+
+  <div class="chart-title">Task 6. Data in Color</div>
+
+  <div class="chart-title">Worry Levels About Not Having Enough Money for Old Age in East Asia & Pacific</div>
+  <div class="chart-subtitle">Demographic breakdown based on The Global Findex Database 2021, World Bank</div>
+  <div class="legend">
+    <span><span class="color-box" style="background-color: #66bd63;"></span>Not Worried</span>
+    <span><span class="color-box" style="background-color: #fee08b;"></span>Somewhat Worried</span>
+    <span><span class="color-box" style="background-color: #d73027;"></span>Very Worried</span>
+  </div>
+  <div id="chart-container">
+    <div class="second-row">
+      <div class="chart-wrapper">
+        <div class="chart-label">Education</div>
+        <div id="education" class="chart"></div>
+      </div>
+      <div class="chart-wrapper">
+        <div class="chart-label">Gender</div>
+        <div id="gender" class="chart"></div>
+      </div>
+      <div class="chart-wrapper">
+        <div class="chart-label">Age</div>
+        <div id="age" class="chart"></div>
+      </div>
+    </div>
+    <div class="second-row">
+      <div class="chart-wrapper">
+        <div class="chart-label">Income</div>
+        <div id="income" class="chart"></div>
+      </div>
+      <div class="chart-wrapper">
+        <div class="chart-label">Labor Force</div>
+        <div id="labor-force" class="chart"></div>
+      </div>
+    </div>
+  </div>
+  <div class="chart-footer">
+    Data source: The Global Findex Database 2021, World Bank.
+    <p>Made with JavaScript</p>
+  </div>
+
+
+
+
+
+
+
+
+<!-- End Page Content -->
+</div>
+
+<!-- Footer -->
+<footer class="w3-container w3-padding-64 w3-light-grey w3-center w3-opacity w3-xlarge" style="margin-top:128px"> 
+</footer>
+ 
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.24.2.min.js"></script>
+  <script>
+    // JSON data for temperature anomalies
+    const temperatureData = [
+      {"year": 1880, "temperature_anomaly": -0.16},
+      {"year": 1881, "temperature_anomaly": -0.08},
+      {"year": 1882, "temperature_anomaly": -0.10},
+      {"year": 1883, "temperature_anomaly": -0.17},
+      {"year": 1884, "temperature_anomaly": -0.28},
+      {"year": 1885, "temperature_anomaly": -0.31},
+      {"year": 1886, "temperature_anomaly": -0.31},
+      {"year": 1887, "temperature_anomaly": -0.35},
+      {"year": 1888, "temperature_anomaly": -0.23},
+      {"year": 1889, "temperature_anomaly": -0.12},
+      {"year": 1890, "temperature_anomaly": -0.35},
+      {"year": 1891, "temperature_anomaly": -0.22},
+      {"year": 1892, "temperature_anomaly": -0.27},
+      {"year": 1893, "temperature_anomaly": -0.31},
+      {"year": 1894, "temperature_anomaly": -0.30},
+      {"year": 1895, "temperature_anomaly": -0.20},
+      {"year": 1896, "temperature_anomaly": -0.11},
+      {"year": 1897, "temperature_anomaly": -0.11},
+      {"year": 1898, "temperature_anomaly": -0.27},
+      {"year": 1899, "temperature_anomaly": -0.16},
+      {"year": 1900, "temperature_anomaly": -0.09},
+      {"year": 1901, "temperature_anomaly": -0.15},
+      {"year": 1902, "temperature_anomaly": -0.27},
+      {"year": 1903, "temperature_anomaly": -0.35},
+      {"year": 1904, "temperature_anomaly": -0.44},
+      {"year": 1905, "temperature_anomaly": -0.28},
+      {"year": 1906, "temperature_anomaly": -0.22},
+      {"year": 1907, "temperature_anomaly": -0.40},
+      {"year": 1908, "temperature_anomaly": -0.43},
+      {"year": 1909, "temperature_anomaly": -0.47},
+      {"year": 1910, "temperature_anomaly": -0.43},
+      {"year": 1911, "temperature_anomaly": -0.44},
+      {"year": 1912, "temperature_anomaly": -0.35},
+      {"year": 1913, "temperature_anomaly": -0.34},
+      {"year": 1914, "temperature_anomaly": -0.15},
+      {"year": 1915, "temperature_anomaly": -0.10},
+      {"year": 1916, "temperature_anomaly": -0.34},
+      {"year": 1917, "temperature_anomaly": -0.44},
+      {"year": 1918, "temperature_anomaly": -0.28},
+      {"year": 1919, "temperature_anomaly": -0.25},
+      {"year": 1920, "temperature_anomaly": -0.26},
+  {"year": 1921, "temperature_anomaly": -0.14},
+  {"year": 1922, "temperature_anomaly": -0.20},
+  {"year": 1923, "temperature_anomaly": -0.22},
+  {"year": 1924, "temperature_anomaly": -0.27},
+  {"year": 1925, "temperature_anomaly": -0.16},
+  {"year": 1926, "temperature_anomaly": -0.10},
+  {"year": 1927, "temperature_anomaly": -0.20},
+  {"year": 1928, "temperature_anomaly": -0.19},
+  {"year": 1929, "temperature_anomaly": -0.36},
+  {"year": 1930, "temperature_anomaly": -0.14},
+  {"year": 1931, "temperature_anomaly": -0.10},
+  {"year": 1932, "temperature_anomaly": -0.17},
+  {"year": 1933, "temperature_anomaly": -0.27},
+  {"year": 1934, "temperature_anomaly": -0.14},
+  {"year": 1935, "temperature_anomaly": -0.20},
+  {"year": 1936, "temperature_anomaly": -0.12},
+  {"year": 1937, "temperature_anomaly": -0.03},
+  {"year": 1938, "temperature_anomaly": -0.03},
+  {"year": 1939, "temperature_anomaly": -0.01},
+  {"year": 1940, "temperature_anomaly": 0.08},
+  {"year": 1941, "temperature_anomaly": 0.12},
+  {"year": 1942, "temperature_anomaly": 0.10},
+  {"year": 1943, "temperature_anomaly": 0.10},
+  {"year": 1944, "temperature_anomaly": 0.19},
+  {"year": 1945, "temperature_anomaly": 0.12},
+  {"year": 1946, "temperature_anomaly": 0.00},
+  {"year": 1947, "temperature_anomaly": -0.01},
+  {"year": 1948, "temperature_anomaly": -0.01},
+  {"year": 1949, "temperature_anomaly": -0.01},
+  {"year": 1950, "temperature_anomaly": -0.17},
+  {"year": 1951, "temperature_anomaly": -0.07},
+  {"year": 1952, "temperature_anomaly": -0.02},
+  {"year": 1953, "temperature_anomaly": 0.09},
+  {"year": 1954, "temperature_anomaly": -0.13},
+  {"year": 1955, "temperature_anomaly": -0.15},
+  {"year": 1956, "temperature_anomaly": -0.20},
+  {"year": 1957, "temperature_anomaly": 0.04},
+  {"year": 1958, "temperature_anomaly": 0.07},
+  {"year": 1959, "temperature_anomaly": 0.03},
+  {"year": 1960, "temperature_anomaly": 0.02},
+  {"year": 1961, "temperature_anomaly": 0.05},
+  {"year": 1962, "temperature_anomaly": 0.02},
+  {"year": 1963, "temperature_anomaly": 0.06},
+  {"year": 1964, "temperature_anomaly": -0.20},
+  {"year": 1965, "temperature_anomaly": -0.14},
+  {"year": 1966, "temperature_anomaly": -0.08},
+  {"year": 1967, "temperature_anomaly": -0.02},
+  {"year": 1968, "temperature_anomaly": -0.08},
+  {"year": 1969, "temperature_anomaly": 0.05},
+  {"year": 1970, "temperature_anomaly": 0.02},
+  {"year": 1971, "temperature_anomaly": -0.09},
+  {"year": 1972, "temperature_anomaly": 0.01},
+  {"year": 1973, "temperature_anomaly": 0.15},
+  {"year": 1974, "temperature_anomaly": -0.07},
+  {"year": 1975, "temperature_anomaly": -0.01},
+  {"year": 1976, "temperature_anomaly": -0.12},
+  {"year": 1977, "temperature_anomaly": 0.18},
+  {"year": 1978, "temperature_anomaly": 0.07},
+  {"year": 1979, "temperature_anomaly": 0.17},
+  {"year": 1980, "temperature_anomaly": 0.27},
+  {"year": 1981, "temperature_anomaly": 0.32},
+  {"year": 1982, "temperature_anomaly": 0.14},
+  {"year": 1983, "temperature_anomaly": 0.30},
+  {"year": 1984, "temperature_anomaly": 0.16},
+  {"year": 1985, "temperature_anomaly": 0.12},
+  {"year": 1986, "temperature_anomaly": 0.19},
+  {"year": 1987, "temperature_anomaly": 0.33},
+  {"year": 1988, "temperature_anomaly": 0.38},
+  {"year": 1989, "temperature_anomaly": 0.29},
+  {"year": 1990, "temperature_anomaly": 0.43},
+  {"year": 1991, "temperature_anomaly": 0.40},
+  {"year": 1991, "temperature_anomaly": 0.40},
+  {"year": 1992, "temperature_anomaly": 0.23},
+  {"year": 1993, "temperature_anomaly": 0.24},
+  {"year": 1994, "temperature_anomaly": 0.32},
+  {"year": 1995, "temperature_anomaly": 0.38},
+  {"year": 1996, "temperature_anomaly": 0.32},
+  {"year": 1997, "temperature_anomaly": 0.42},
+  {"year": 1998, "temperature_anomaly": 0.63},
+  {"year": 1999, "temperature_anomaly": 0.42},
+  {"year": 2000, "temperature_anomaly": 0.42},
+  {"year": 2001, "temperature_anomaly": 0.54},
+  {"year": 2002, "temperature_anomaly": 0.63},
+  {"year": 2003, "temperature_anomaly": 0.62},
+  {"year": 2004, "temperature_anomaly": 0.54},
+  {"year": 2005, "temperature_anomaly": 0.67},
+  {"year": 2006, "temperature_anomaly": 0.63},
+  {"year": 2007, "temperature_anomaly": 0.66},
+  {"year": 2008, "temperature_anomaly": 0.54},
+  {"year": 2009, "temperature_anomaly": 0.64},
+  {"year": 2010, "temperature_anomaly": 0.70},
+  {"year": 2011, "temperature_anomaly": 0.58},
+  {"year": 2012, "temperature_anomaly": 0.63},
+  {"year": 2013, "temperature_anomaly": 0.67},
+  {"year": 2014, "temperature_anomaly": 0.74},
+  {"year": 2015, "temperature_anomaly": 0.87},
+  {"year": 2016, "temperature_anomaly": 0.99},
+  {"year": 2017, "temperature_anomaly": 0.91},
+  {"year": 2018, "temperature_anomaly": 0.85},
+  {"year": 2019, "temperature_anomaly": 0.98},
+  {"year": 2020, "temperature_anomaly": 0.98},
+  {"year": 2021, "temperature_anomaly": 0.85},
+  {"year": 2022, "temperature_anomaly": 0.98},
+  {"year": 2023, "temperature_anomaly": 1.17}
+    ];
+
+ 
+    // Extract years and anomalies
+    const years = temperatureData.map(d => d.year);
+    const anomalies = temperatureData.map(d => d.temperature_anomaly);
+
+    // Last data point for highlighting
+    const lastYear = temperatureData[temperatureData.length - 1].year;
+    const lastAnomaly = temperatureData[temperatureData.length - 1].temperature_anomaly;
+
+
+    // Function to calculate Lowess smoothing
+    function calculateLowess(x, y, bandwidth = 1.6) {
+      const smoothed = [];
+      const n = x.length;
+      for (let i = 0; i < n; i++) {
+        const weights = x.map(val => Math.exp(-Math.pow((x[i] - val) / bandwidth, 2)));
+        const sumWeights = weights.reduce((a, b) => a + b, 0);
+        const weightedMeanY = weights.reduce((sum, w, idx) => sum + w * y[idx], 0) / sumWeights;
+        smoothed.push(weightedMeanY);
+      }
+      return smoothed;
+    }
+
+    // Apply Lowess smoothing
+    const smoothedAnomalies = calculateLowess(years, anomalies);
+
+    // Plotly data
+    const data = [
+      {
+        x: years,
+        y: anomalies,
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: 'Annual Mean',
+        marker: { color: 'blue' },
+        line: { color: 'blue' }
+      },
+      {
+        x: years,
+        y: smoothedAnomalies,
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Lowess Smoothing',
+        line: { color: 'black', width: 2 }
+      }
+      
+    ];
+
+
+    const layout1 = {
+      title: 'Global Land-Ocean Temperature Index',
+      xaxis: {
+        title: 'Year',
+        range: [1880, 2025] // Start from 1880
+      },
+      yaxis: { title: 'Temperature Anomaly (°C)' , fixedrange: true},
+      dragmode: 'zoom',
+      legend: {
+        x: 0,
+        y: 1,
+        bgcolor: 'rgba(255, 255, 255, 0.8)',
+        bordercolor: 'black',
+        borderwidth: 1
+      }
+    };
+
+    const config = {
+      responsive: true,
+      displayModeBar: false
+    };
+
+    // Render the graph
+    Plotly.newPlot('temperature-graph', data, layout1, config);
+
+
+
+
+
+
+
+
+
+// Toggle grid padding
+function myFunction() {
+  var x = document.getElementById("myGrid");
+  if (x.className === "w3-row") {
+    x.className = "w3-row-padding";
+  } else { 
+    x.className = x.className.replace("w3-row-padding", "w3-row");
+  }
+}
+
+// Open and close sidebar
+function w3_open() {
+  document.getElementById("mySidebar").style.width = "100%";
+  document.getElementById("mySidebar").style.display = "block";
+}
+
+function w3_close() {
+  document.getElementById("mySidebar").style.display = "none";
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+ // Data
+ const sectors = [
+      "Agriculture",
+      "Buildings & Infrastructure",
+      "Energy Systems",
+      "Industry",
+      "Others & Cross-sectoral",
+      "Transport",
+      "Waste",
+      "Water & Wastewater"
+    ];
+
+    const funding2021 = [23178.59, 111210.87, 75045.05, 2425.98, 11415.17, 74399.21, 13748.02, 2437.71];
+    const funding2022 = [17556.21, 141713.07, 83977.09, 12121.06, 4665.52, 94721.94, 9196.68, 1811.41];
+
+    // Y positions for each sector
+    const yPositions = Array.from({ length: sectors.length }, (_, i) => i);
+
+    // Create invisible scatter points for hover functionality
+    const traceHover = {
+      x: funding2021.concat(funding2022), // Combine 2021 and 2022 for alignment
+      y: yPositions.concat(yPositions),
+      mode: "markers",
+      marker: { opacity: 0 }, // Make points invisible
+      hovertext: funding2021.map((value, i) => `Year: 2021<br>Value: ${Math.round(value).toLocaleString()} USD`)
+        .concat(funding2022.map((value, i) => `Year: 2022<br>Value: ${Math.round(value).toLocaleString()} USD`)),
+      hoverinfo: "text", // Show hover info only
+      showlegend: false // Remove from legend
+    };
+
+    // Create arrow annotations
+    const arrowsAndLabels = sectors.map((sector, i) => {
+      const color = funding2022[i] > funding2021[i] ? "green" : "red";
+      const annotations = [
+        // Arrow
+        {
+          x: funding2022[i],
+          y: yPositions[i],
+          ax: funding2021[i],
+          ay: yPositions[i],
+          xref: "x",
+          yref: "y",
+          axref: "x",
+          ayref: "y",
+          arrowhead: 4,
+          arrowwidth: 2, // Slightly thicker arrows
+          arrowsize: 1,
+          arrowcolor: color,
+          showarrow: true
+        },
+        // Label for 2022 values
+        {
+          x: funding2022[i],
+          y: yPositions[i],
+          text: "$" + Math.round(funding2022[i]).toLocaleString() + "M", // Rounded value
+          showarrow: false,
+          font: { color: "black", size: 10 },
+          xanchor: funding2022[i] > funding2021[i] ? "left" : "right", // Align based on arrow direction
+          yanchor: "middle"
+        }
+      ];
+
+      // Add "2021" and "2022" above the arrow for "Buildings & Infrastructure"
+      if (sector === "Buildings & Infrastructure") {
+        annotations.push(
+          {
+            x: funding2021[i],
+            y: yPositions[i] - 0.2, // Slightly above the arrow
+            text: "2021",
+            showarrow: false,
+            font: { color: "black", size: 10 },
+            xanchor: "center",
+            yanchor: "bottom"
+          },
+          {
+            x: funding2022[i],
+            y: yPositions[i] - 0.2, // Slightly above the arrow
+            text: "2022",
+            showarrow: false,
+            font: { color: "black", size: 10 },
+            xanchor: "center",
+            yanchor: "bottom"
+          }
+        );
+      }
+      return annotations;
+    }).flat();
+
+    // Layout
+    const layout = {
+      title: "Western Europe: Direction of Climate Finance by Sector (2021-2022)",
+      xaxis: {
+        title: "Funding Amount (in USD million)",
+        showgrid: true,
+        zeroline: false
+      },
+      yaxis: {
+        showgrid: true,
+        zeroline: false,
+        tickvals: yPositions,
+        ticktext: sectors,
+        autorange: "reversed", // Ensures sectors are listed top-to-bottom
+        tickfont: { size: 10 } // Reduce font size for y-axis labels
+      },
+      annotations: arrowsAndLabels, // Attach the arrows and 2022 labels
+      margin: { t: 70, b: 50, l: 150, r: 50 }, // Adjusted bottom margin
+      height: 450, // Chart height
+      width: 900 // Chart width
+    };
+
+    // Plot with invisible points for hover info and arrows with labels
+    Plotly.newPlot("chart", [traceHover], layout);
+
+
+
+
+
+
+
+ // Data
+ const years2 = ["2019", "2020", "2021", "2022", "2023"];
+    const switzerland = [70.81818, 68.84398, 68.28715, 66.13577, 64.94619];
+    const italy = [68.67715, 65.94142, 60.05066, 57.82556, 55.03911];
+    const germany = [22.49635, 19.2049, 15.59861, 14.49956, 13.77258];
+
+    // Helper function to round and format numbers without decimals
+    const formatNumber = (num) => Math.round(num).toLocaleString();
+
+    // Create traces for each country with patterns and number labels
+    const traceSwitzerland = {
+      x: years2,
+      y: switzerland,
+      name: "Switzerland",
+      type: "bar",
+      text: switzerland.map(formatNumber), // Numbers without decimals
+      textposition: "outside", // Place text above bars
+      marker: {
+        color: "white",
+        line: { color: "black", width: 1 },
+        pattern: {
+          shape: "/",
+          size: 8 // Smaller diagonal lines
+        }
+      }
+    };
+
+    const traceItaly = {
+      x: years2,
+      y: italy,
+      name: "Italy",
+      type: "bar",
+      text: italy.map(formatNumber), // Numbers without decimals
+      textposition: "outside", // Place text above bars
+      marker: {
+        color: "gray",
+        line: { color: "black", width: 1 },
+        pattern: {
+          shape: "x",
+          size: 6 // Smaller crosshatch
+        }
+      }
+    };
+
+    const traceGermany = {
+      x: years2,
+      y: germany,
+      name: "Germany",
+      type: "bar",
+      text: germany.map(formatNumber), // Numbers without decimals
+      textposition: "outside", // Place text above bars
+      marker: {
+        color: "black",
+        line: { color: "black", width: 1 },
+        pattern: {
+          shape: ".", // Smaller dots
+          size: 4 // Adjusted dot size
+        }
+      }
+    };
+
+    // Combine traces
+    const data1 = [traceSwitzerland, traceItaly, traceGermany];
+
+    // Layout
+    const layout2 = {
+      title: "Number of Commercial Bank Branches per 1,000 km²",
+      barmode: "group", // Grouped bars
+      xaxis: {
+        title: "Year",
+        automargin: true
+      },
+      yaxis: {
+        title: "Number of Branches",
+        automargin: true
+      },
+      margin: {
+        t: 70, // Adjusted top margin
+        b: 50, // Standard bottom margin
+        l: 80,
+        r: 50
+      },
+      legend: {
+        orientation: "h",
+        y: -0.2 // Place legend below the chart
+      }
+    };
+
+    // Render the chart
+    Plotly.newPlot("chart2", data1, layout2);
+
+
+
+
+
+    // Function to create a single stacked bar chart
+    function createChart(container, labels, values) {
+      const colors = ["#66bd63", "#fee08b", "#d73027"];
+      const traces = values.map((value, i) => ({
+        x: value,
+        y: labels,
+        type: "bar",
+        orientation: "h",
+        marker: { color: colors[i] },
+        hoverinfo: "none", // Disable hover info
+        showlegend: false,
+      }));
+
+      const layout = {
+        barmode: "stack",
+        xaxis: {
+          tickmode: "array",
+          tickvals: [0, 25, 50, 75, 100],
+          ticktext: ["0%", "25", "50", "75", "100"],
+          side: "top",
+          range: [0, 100],
+          showgrid: false,
+          zeroline: false,
+        },
+        yaxis: {
+          automargin: true,
+          showgrid: false,
+          zeroline: false,
+        },
+        margin: { t: 30, b: 10, l: 50, r: 10 },
+        height: 150,
+        width: 350,
+      };
+
+      Plotly.newPlot(container, traces, layout);
+    }
+
+    // Create each chart
+    createChart("education", ["Primary", "Secondary"], [
+      [33, 39], // Not Worried
+      [31, 39], // Somewhat Worried
+      [34, 21], // Very Worried
+    ]);
+
+    createChart("gender", ["Female", "Male"], [
+      [34, 38], // Not Worried
+      [36, 33], // Somewhat Worried
+      [28, 27], // Very Worried
+    ]);
+
+    createChart("age", ["Young (15-24)", "Older (25+)"], [
+      [42, 35], // Not Worried
+      [35, 35], // Somewhat Worried
+      [21, 29], // Very Worried
+    ]);
+
+    createChart("income", ["Poorest 40%", "Richest 60%"], [
+      [26, 43], // Not Worried
+      [32, 36], // Somewhat Worried
+      [39, 20], // Very Worried
+    ]);
+
+    createChart("labor-force", ["Out of Labor Force", "In Labor Force"], [
+      [22, 18], // Not Worried
+      [38, 40], // Somewhat Worried
+      [40, 41], // Very Worried
+    ]);
+
+
+
+
+
+
+
+
+
+</script>
+
+</body>
+</html>
